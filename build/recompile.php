@@ -15,19 +15,28 @@ $code = "<?php\n" .
 	"function __autoload(\$c) { require_once dirname(__FILE__) . \"/jeph/c/\$c.php\"; }\n" .
 	$imageCode;
 
-$parser = new JSParser;
-$compiler = new JSCompiler;
+if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
+	filemtime(dirname(__FILE__) . '/cache/jeph') >= filemtime(dirname(__FILE__) . '/jeph.js'))
+{
+	$compiled = unserialize(file_get_contents(dirname(__FILE__) . '/cache/jeph'));
 
-list($ok, $ast, $error) = $parser->__invoke(
-	file_get_contents($f = dirname(__FILE__) . '/jeph.js'),
-	array('file' => $f)
-);
+} else {
+	$parser = new JSParser;
+	$compiler = new JSCompiler;
 
-$compiled = $compiler->__invoke($ast, array(
-	'force' => TRUE,
-	'generate' => 'object',
-	'loader' => 'loadFunction'
-));
+	list($ok, $ast, $error) = $parser->__invoke(
+		file_get_contents($f = dirname(__FILE__) . '/jeph.js'),
+		array('file' => $f)
+	);
+
+	$compiled = $compiler->__invoke($ast, array(
+		'force' => TRUE,
+		'generate' => 'object',
+		'loader' => 'loadFunction'
+	));
+
+	file_put_contents(dirname(__FILE__) . '/cache/jeph', serialize($compiled));
+}
 
 if (!class_exists('JS')) {
 	eval($imageCode);

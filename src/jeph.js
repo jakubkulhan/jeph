@@ -20,23 +20,39 @@ jeph._required = {};
 jeph._exports = {};
 
 global.require = jeph.require = function require(path) {
+	if (!PHP.fn("file_exists")(path)) {
+		throw new Error("file " + path + " does not exist");
+	}
+
 	if (typeof jeph._required[path] !== "undefined") {
 		return jeph._exports[path];
 	}
 
-	var parse = PHP.cls("JSParser")(), compile = PHP.cls("JSCompiler")(), ast;
-
-	ast = parse(PHP.fn("file_get_contents")(path), { file: path });
-
-	if (!ast[0]) {
-		throw new SyntaxError("syntax error in " + path + "@" + ast[2].line + ":" +
-			ast[2].column + "; expected " + ast[2].expected.join(", "));
-	}
+	var compiled, cacheFile = __dirname + "/cache/" + PHP.fn("md5")(path);
 
 	jeph._required[path] = true;
 
-	var compiled = compile(ast[1], { force: true, generate: "object", loader: "loadFunction" }),
-		code = "", main = compiled.main;
+	if (PHP.fn("file_exists")(cacheFile) &&
+		PHP.fn("filemtime")(cacheFile) >= PHP.fn("filemtime")(path))
+	{
+		compiled = PHP.fn("unserialize")(PHP.fn("file_get_contents")(cacheFile));
+
+	} else {
+		var parse = PHP.cls("JSParser")(), compile = PHP.cls("JSCompiler")(), ast;
+
+		ast = parse(PHP.fn("file_get_contents")(path), { file: path });
+
+		if (!ast[0]) {
+			throw new SyntaxError("syntax error in " + path + "@" + ast[2].line + ":" +
+				ast[2].column + "; expected " + ast[2].expected.join(", "));
+		}
+
+		compiled = compile(ast[1], { force: true, generate: "object", loader: "loadFunction" });
+
+		PHP.fn("file_put_contents")(cacheFile, PHP.fn("serialize")(compiled));
+	}
+
+	var code = "", main = compiled.main;
 
 	for (var k in compiled.functions) {
 		if (k !== main) {
