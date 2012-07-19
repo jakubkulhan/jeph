@@ -9,18 +9,15 @@ task("build:recompile", "build recompile script",
 	});
 
 task("build:image", "build image with loader",
-	result(__dirname + "/js2php/build/image.php"),
-	__filename,
+	result(__dirname + "/build/image.php"),
+	__dirname + "/js2php/src/image/*.js",
 	function () {
-		if (PHP.fn("file_get_contents")(__dirname + "/js2php/build/image.php")
-			.indexOf("loadFunction") === -1)
-		{
-			// initially when image was not build with loader
-			run("touch", __dirname + "/js2php/src/image/*");
-		}
-
+		run("touch", __dirname + "/js2php/src/image/*");
 		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image", "loadFunction");
-		run("touch", __dirname + "/js2php/build/image.php");
+		run("mv", __dirname + "/js2php/build/image.php", __dirname + "/build");
+		run("touch", __dirname + "/js2php/src/image/*");
+		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image");
+		run("touch", __dirname + "/build/image.php");
 	});
 
 task("build:bundle", "build jeph bundle",
@@ -58,7 +55,7 @@ task("build:bundle", "build jeph bundle",
 
 		// then populates jeph/c and jeph/f with image functions/classes
 		puts("[ INCLUDING image functions and classes ]");
-		PHP.fn("file_get_contents")(__dirname + "/js2php/build/image.php")
+		PHP.fn("file_get_contents")(__dirname + "/build/image.php")
 			.split(/\n/).forEach(function (line) {
 				var m;
 
@@ -89,7 +86,8 @@ task("build:bundle", "build jeph bundle",
 		code += "file_put_contents(dirname(__FILE__) . '/jeph/recompile.init.php', " +
 			var_export("<?php\n$imageCode = " + var_export(imageCode, true) + ";\n" +
 				"$serialized = " + serialized + ";\n", true) +
-			" . '$basePath = ' . var_export($basePath, TRUE) . \";\\n\");\n";
+			" . '$basePath = ' . var_export($basePath, TRUE) . \";\\n\"" +
+			" . '$mainFile = dirname(__FILE__) . \\'/index.php\\';' . \"\\n\");\n";
 
 		// TODO: .htaccess
 

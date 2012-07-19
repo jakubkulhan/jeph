@@ -1,5 +1,5 @@
 jeph(function (req, res) {
-	var body = "Hello, world!\n";
+	var body = "Hi! This is Jeph.\n";
 
 	res.writeHead(200, {
 		"Content-Type": "text/plain; charset=UTF-8",
