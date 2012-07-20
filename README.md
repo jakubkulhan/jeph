@@ -7,6 +7,8 @@ js2php's runtime environment.
 
 Hello, world in Jeph looks like this:
 
+	var jeph = require("jeph");
+
 	jeph(function (req, res) {
 		var body = "Hello, world!\n";
 
@@ -28,7 +30,8 @@ in the browser, you'll see `Hello, world!`.
 
 	jeph/src/main.js:
 
-	var body = require("./message.js");
+	var jeph = require("jeph"),
+		body = require("./message.js");
 
 	jeph(function (req, res) {
 		res.writeHead(200, {

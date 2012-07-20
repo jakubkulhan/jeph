@@ -26,7 +26,7 @@ $code = "<?php\n" .
 	$imageCode;
 
 if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
-	filemtime(dirname(__FILE__) . '/cache/jeph') >= filemtime(dirname(__FILE__) . '/jeph.js'))
+	filemtime(dirname(__FILE__) . '/cache/jeph') >= filemtime(dirname(__FILE__) . '/jeph/index.js'))
 {
 	$compiled = unserialize(file_get_contents(dirname(__FILE__) . '/cache/jeph'));
 
@@ -35,7 +35,7 @@ if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
 	$compiler = new JSCompiler;
 
 	list($ok, $ast, $error) = $parser->__invoke(
-		file_get_contents($f = dirname(__FILE__) . '/jeph.js'),
+		file_get_contents($f = dirname(__FILE__) . '/jeph/index.js'),
 		array('file' => $f)
 	);
 

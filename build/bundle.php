@@ -1,14 +1,14 @@
 <?php
-@mkdir(dirname(__FILE__) . '/jeph', 0755);
-@mkdir(dirname(__FILE__) . '/jeph/c', 0755);
-@mkdir(dirname(__FILE__) . '/jeph/f', 0755);
-@mkdir(dirname(__FILE__) . '/jeph/cache', 0755);
-@mkdir(dirname(__FILE__) . '/jeph/src', 0755);
-@mkdir(dirname(__FILE__) . '/jeph/jeph', 0755);
-file_put_contents(dirname(__FILE__) . '/jeph/jeph.js', 'function require(path) {
+@mkdir(dirname(__FILE__) . '/jeph', 0775);
+@mkdir(dirname(__FILE__) . '/jeph/c', 0775);
+@mkdir(dirname(__FILE__) . '/jeph/f', 0775);
+@mkdir(dirname(__FILE__) . '/jeph/cache', 0775);
+@mkdir(dirname(__FILE__) . '/jeph/jeph', 0775);
+@mkdir(dirname(__FILE__) . '/jeph/src', 0775);
+file_put_contents(dirname(__FILE__) . '/jeph/jeph/index.js', 'function require(path) {
 	// standard library
 	if (path.charAt(0) !== "." && path.charAt(0) !== "/") {
-		path = __dirname + "/" + path;
+		path = __dirname + "/../" + path;
 
 	// from current/parent directory
 	} else if (path.substring(0, 2) === "./" || path.substring(0, 3) === "../") {
@@ -75,6 +75,9 @@ require._functions = {};
 require._required = {};
 require._exports = {};
 require["."] = __dirname;
+
+require._required[__filename] = true;
+require._exports[__filename] = jeph;
 
 require._extensions = {
 	".js": function (path) {
@@ -171,12 +174,10 @@ function jeph(handler) {
 	}
 }
 
-global.jeph = jeph;
-
 jeph._request = require("jeph/request");
 jeph._response = require("jeph/response");
 
-require("./src/main.js");
+require("../src/main.js");
 ');
 file_put_contents(dirname(__FILE__) . '/jeph/jeph/request.js', 'var request = {};
 
@@ -359,7 +360,9 @@ Object.defineProperties(response, {
 
 exports = response;
 ');
-file_put_contents(dirname(__FILE__) . '/jeph/src/main.js', 'jeph(function (req, res) {
+file_put_contents(dirname(__FILE__) . '/jeph/src/main.js', 'var jeph = require("jeph");
+
+jeph(function (req, res) {
 	var body = "Hi! This is Jeph.\\n";
 
 	res.writeHead(200, {
@@ -397,7 +400,7 @@ $code = "<?php\\n" .
 	$imageCode;
 
 if (file_exists(dirname(__FILE__) . \'/cache/jeph\') &&
-	filemtime(dirname(__FILE__) . \'/cache/jeph\') >= filemtime(dirname(__FILE__) . \'/jeph.js\'))
+	filemtime(dirname(__FILE__) . \'/cache/jeph\') >= filemtime(dirname(__FILE__) . \'/jeph/index.js\'))
 {
 	$compiled = unserialize(file_get_contents(dirname(__FILE__) . \'/cache/jeph\'));
 
@@ -406,7 +409,7 @@ if (file_exists(dirname(__FILE__) . \'/cache/jeph\') &&
 	$compiler = new JSCompiler;
 
 	list($ok, $ast, $error) = $parser->__invoke(
-		file_get_contents($f = dirname(__FILE__) . \'/jeph.js\'),
+		file_get_contents($f = dirname(__FILE__) . \'/jeph/index.js\'),
 		array(\'file\' => $f)
 	);
 

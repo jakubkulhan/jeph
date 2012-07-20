@@ -33,12 +33,30 @@ task("build:bundle", "build jeph bundle",
 		// TODO: handling and reporting of errors
 
 		// init makes directory structure
-		code += "@mkdir(dirname(__FILE__) . '/jeph', 0755);\n";
-		code += "@mkdir(dirname(__FILE__) . '/jeph/c', 0755);\n";
-		code += "@mkdir(dirname(__FILE__) . '/jeph/f', 0755);\n";
-		code += "@mkdir(dirname(__FILE__) . '/jeph/cache', 0755);\n";
-		code += "@mkdir(dirname(__FILE__) . '/jeph/src', 0755);\n";
-		code += "@mkdir(dirname(__FILE__) . '/jeph/jeph', 0755);\n";
+		code += "@mkdir(dirname(__FILE__) . '/jeph', 0775);\n";
+		code += "@mkdir(dirname(__FILE__) . '/jeph/c', 0775);\n";
+		code += "@mkdir(dirname(__FILE__) . '/jeph/f', 0775);\n";
+		code += "@mkdir(dirname(__FILE__) . '/jeph/cache', 0775);\n";
+
+		function getAllSubdirs(dir) {
+			var dirs = [];
+
+			PHP.fn("glob")(dir + "/*").forEach(function (d) {
+				if (!PHP.fn("is_dir")(d)) { return; }
+				dirs.push(d.substring(dir.length + 1));
+
+				getAllSubdirs(dir + "/" + d).forEach(function (e) {
+					dirs.push(d + "/" + e);
+				});
+			});
+
+			return dirs;
+		}
+
+		getAllSubdirs(__dirname + "/src").forEach(function (d) {
+			code += "@mkdir(dirname(__FILE__) . " +
+				PHP.fn("var_export")("/jeph/" + d, true) + ", 0775);\n";
+		});
 
 		// then uploads jeph sources
 		puts("[ INCLUDING jeph source ]");

@@ -1,3 +1,5 @@
+var jeph = require("jeph");
+
 jeph(function (req, res) {
 	var body = "Hi! This is Jeph.\n";
 

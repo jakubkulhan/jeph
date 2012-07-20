@@ -1,7 +1,7 @@
 function require(path) {
 	// standard library
 	if (path.charAt(0) !== "." && path.charAt(0) !== "/") {
-		path = __dirname + "/" + path;
+		path = __dirname + "/../" + path;
 
 	// from current/parent directory
 	} else if (path.substring(0, 2) === "./" || path.substring(0, 3) === "../") {
@@ -68,6 +68,9 @@ require._functions = {};
 require._required = {};
 require._exports = {};
 require["."] = __dirname;
+
+require._required[__filename] = true;
+require._exports[__filename] = jeph;
 
 require._extensions = {
 	".js": function (path) {
@@ -164,9 +167,7 @@ function jeph(handler) {
 	}
 }
 
-global.jeph = jeph;
-
 jeph._request = require("jeph/request");
 jeph._response = require("jeph/response");
 
-require("./src/main.js");
+require("../src/main.js");
