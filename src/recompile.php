@@ -1,7 +1,17 @@
 <?php
-require dirname(__FILE__) . '/c/JSParser.php';
-require dirname(__FILE__) . '/c/JSCompiler.php';
 require dirname(__FILE__) . '/recompile.init.php'; // exports $imageCode, $serialized, and $basePath
+
+eval($imageCode);
+
+function loadFunction($fn) {
+	if (!function_exists($fn->call)) {
+		require_once dirname(__FILE__) . "/f/{$fn->call}.php";
+	}
+}
+
+function __autoload($c) {
+	require_once dirname(__FILE__) . "/c/$c.php";
+}
 
 // TODO: handling and reporting of errors
 
@@ -36,22 +46,6 @@ if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
 	));
 
 	file_put_contents(dirname(__FILE__) . '/cache/jeph', serialize($compiled));
-}
-
-if (!class_exists('JS')) {
-	eval($imageCode);
-}
-
-if (!function_exists('loadFunction')) {
-	function loadFunction($fn) {
-		if (!function_exists($fn->call)) {
-			require_once dirname(__FILE__) . "/f/{$fn->call}.php";
-		}
-	}
-
-	function __autoload($c) {
-		require_once dirname(__FILE__) . "/c/$c.php";
-	}
 }
 
 eval(implode("\n", $compiled->functions));
