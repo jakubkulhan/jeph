@@ -38,6 +38,7 @@ task("build:bundle", "build jeph bundle",
 		code += "@mkdir(dirname(__FILE__) . '/jeph/f', 0755);\n";
 		code += "@mkdir(dirname(__FILE__) . '/jeph/cache', 0755);\n";
 		code += "@mkdir(dirname(__FILE__) . '/jeph/src', 0755);\n";
+		code += "@mkdir(dirname(__FILE__) . '/jeph/jeph', 0755);\n";
 
 		// then uploads jeph sources
 		puts("[ INCLUDING jeph source ]");

@@ -28,7 +28,7 @@ in the browser, you'll see `Hello, world!`.
 
 	jeph/src/main.js:
 
-	var body = require(__dirname + "/message.js");
+	var body = require("./message.js");
 
 	jeph(function (req, res) {
 		res.writeHead(200, {
@@ -41,7 +41,7 @@ in the browser, you'll see `Hello, world!`.
 
 	jeph/src/message.js:
 
-	return "Hello from message.js!";
+	exports = "Hello from message.js!";
 
 ## Building
 
@@ -102,6 +102,7 @@ should do as much as possible at compile time.
 
 What to do at compile time:
 
+- `require()` files (`require()` is only available at compile time)
 - load configuration
 - create objects, object graph
 

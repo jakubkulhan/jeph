@@ -56,7 +56,7 @@ $c(JS::$global);
 
 JS::$global->properties['jeph']->properties['_request']->properties['basePath'] = $basePath;
 
-$fns = JS::$global->properties['jeph']->properties['_functions']->properties;
+$fns = JS::$global->properties['require']->properties['_functions']->properties;
 
 foreach ($compiled->functions as $fn => $c) {
 	if ($fn !== $compiled->main) {
@@ -96,8 +96,7 @@ function unloadify($o) {
 
 unloadify(JS::$global);
 
-unset(JS::$global->properties['jeph']->properties['_functions'],
-	JS::$global->properties['jeph']->attributes['_functions'],
+unset(JS::$global->properties['require'], JS::$global->attributes['require'],
 	JS::$global->scope, JS::$global->trace);
 
 $r = new ReflectionClass('JS');
