@@ -74,7 +74,7 @@ require._exports[__filename] = jeph;
 
 require._extensions = {
 	".js": function (path) {
-		var compiled, cacheFile = __dirname + "/cache/" + PHP.fn("md5")(path);
+		var compiled, cacheFile = __dirname + "/../cache/" + PHP.fn("md5")(path);
 
 		if (PHP.fn("file_exists")(cacheFile) &&
 			PHP.fn("filemtime")(cacheFile) >= PHP.fn("filemtime")(path))
@@ -94,6 +94,9 @@ require._extensions = {
 			compiled = compile(ast[1], { force: true, generate: "object", loader: "loadFunction" });
 
 			PHP.fn("file_put_contents")(cacheFile, PHP.fn("serialize")(compiled));
+
+			delete parse;
+			delete compile;
 		}
 
 		var code = "", main = compiled.main, savedCurrentDirectory, savedExports, exports = {};
@@ -114,6 +117,8 @@ require._extensions = {
 			global.exports = "a";
 
 			@@ eval(`code); `main(`global); @@
+			delete code;
+			delete compiled;
 
 			exports = global.exports;
 
@@ -130,8 +135,26 @@ require._extensions = {
 	}
 };
 
+function jeph(handler) {
+	if (typeof jeph._handler === "function") {
+		var previousHandler = jeph._handler;
+
+		jeph._handler = function chainHandler(req, res) {
+			previousHandler(req, res);
+
+			if (!res.sent) { handler(req, res); }
+		};
+
+	} else {
+		jeph._handler = handler;
+	}
+}
+
+global._request = require("jeph/request");
+global._response = require("jeph/response");
+
 global._main = function main() {
-	var req = jeph._request, res = jeph._response, headers = {};
+	var req = global._request, res = global._response, headers = {};
 
 	@@ `req->properties['method'] = $_SERVER['REQUEST_METHOD']; @@
 	@@ `req->properties['url'] = $_SERVER['REQUEST_URI']; @@
@@ -152,22 +175,4 @@ global._main = function main() {
 	return jeph._handler.call(global, req, res);
 };
 
-function jeph(handler) {
-	if (typeof jeph._handler === "function") {
-		var previousHandler = jeph._handler;
-
-		jeph._handler = function chainHandler(req, res) {
-			previousHandler(req, res);
-
-			if (!res.sent) { handler(req, res); }
-		};
-
-	} else {
-		jeph._handler = handler;
-	}
-}
-
-jeph._request = require("jeph/request");
-jeph._response = require("jeph/response");
-
-require("../src/main.js");
+require("src/main.js");

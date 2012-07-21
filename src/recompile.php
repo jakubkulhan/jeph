@@ -54,7 +54,7 @@ foreach (unserialize($serialized) as $k => $v) { JS::$$k = $v; }
 $c = $compiled->main;
 $c(JS::$global);
 
-JS::$global->properties['jeph']->properties['_request']->properties['basePath'] = $basePath;
+JS::$global->properties['_request']->properties['basePath'] = $basePath;
 
 $fns = JS::$global->properties['require']->properties['_functions']->properties;
 
@@ -96,15 +96,28 @@ function unloadify($o) {
 
 unloadify(JS::$global);
 
-unset(JS::$global->properties['require'], JS::$global->attributes['require'],
-	JS::$global->scope, JS::$global->trace);
+JS::$global->properties['require']->properties['_functions'] = clone JS::$objectTemplate;
+JS::$wrappedObjectTemplates = JS::$wrappedObjects = array();
+unset(JS::$global->scope, JS::$global->scope_sp, JS::$global->trace, JS::$global->trace_sp);
 
 $r = new ReflectionClass('JS');
 $code .= 'foreach (unserialize(' . var_export(serialize($r->getStaticProperties()), TRUE) .
 	') as $k => $v) { JS::$$k = $v; }' . "\n";
 
+$code .= "try {\n";
 $code .= 'call_user_func(JS::$global->properties[\'_main\']->call, ' .
 	'JS::$global, JS::$global, JS::$global->properties[\'_main\'], array());' . "\n";
+$code .= "} catch (JSException \$e) {\n" .
+	"echo JS::toString(\$e, JS::\$global);" .
+	"if (isset(\$e->value->class) && \$e->value->class === 'Error') {\n" .
+		"echo ' in ', \$e->value->properties['file'], '@', " .
+			"\$e->value->properties['line'], ':', \$e->value->properties['column'];" .
+	"}\n" .
+	"echo \"\\n\";" .
+	"foreach (array_reverse(JS::\$global->trace) as \$t) {\n" .
+		"echo '  ', \$t[0], '@', \$t[1], ':', \$t[2], \"\\n\";" .
+	"}\n" .
+"}\n";
 
 $code .= "}\n";
 
