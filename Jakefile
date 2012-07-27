@@ -11,10 +11,22 @@ task("build:recompile", "build recompile script",
 task("build:image", "build image with loader",
 	result(__dirname + "/build/image.php"),
 	__dirname + "/js2php/src/image/*.js",
-	function () {
+	__dirname + "/js2php/src/*",
+	function (php52) {
+		if (php52) {
+			run("touch", __dirname + "/js2php/src/JSParser.phpeg");
+			run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:parser", "5.2");
+		}
+
 		run("touch", __dirname + "/js2php/src/image/*");
 		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image", "loadFunction");
 		run("mv", __dirname + "/js2php/build/image.php", __dirname + "/build");
+
+		if (php52) {
+			run("touch", __dirname + "/js2php/src/JSParser.phpeg");
+			run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:parser");
+		}
+
 		run("touch", __dirname + "/js2php/src/image/*");
 		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image");
 		run("touch", __dirname + "/build/image.php");

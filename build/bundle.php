@@ -231,7 +231,7 @@ Object.defineProperties(response, {
 				reasonPhrase = statusCodes[statusCode] || "Reason";
 			}
 
-			@@ header_remove(); @@
+			if (@@ function_exists(\'header_remove\') @@) { @@ header_remove(); @@ }
 			@@ header(\'HTTP/1.1 \' . `statusCode . \' \' . `reasonPhrase); @@
 
 			Object.defineProperty(this, "statusCode",
