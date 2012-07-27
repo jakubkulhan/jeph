@@ -101,7 +101,8 @@ function unloadify($o) {
 
 unloadify(JS::$global);
 
-JS::$global->properties['require']->properties['_functions'] = clone JS::$objectTemplate;
+JS::$global->properties['require']->properties['compiled'] = clone JS::$objectTemplate;
+JS::$global->properties['require']->properties['saveCompiled'] = false;
 JS::$wrappedObjectTemplates = JS::$wrappedObjects = array();
 unset(JS::$global->scope, JS::$global->scope_sp, JS::$global->trace, JS::$global->trace_sp);
 
