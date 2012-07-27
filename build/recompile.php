@@ -24,9 +24,10 @@ $code = "<?php\n" .
 	"\"/jeph/f/{\$fn->call}.php\"; \$fn->loaded = TRUE; }\n" .
 	"function __autoload(\$c) { require_once dirname(__FILE__) . \"/jeph/c/\$c.php\"; }\n" .
 	$imageCode;
+$f = dirname(__FILE__) . '/jeph_modules/jeph/index.js';
 
 if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
-	filemtime(dirname(__FILE__) . '/cache/jeph') >= filemtime(dirname(__FILE__) . '/jeph/index.js'))
+	filemtime(dirname(__FILE__) . '/cache/jeph') >= filemtime($f))
 {
 	$compiled = unserialize(file_get_contents(dirname(__FILE__) . '/cache/jeph'));
 
@@ -35,7 +36,7 @@ if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
 	$compiler = new JSCompiler;
 
 	list($ok, $ast, $error) = $parser->__invoke(
-		file_get_contents($f = dirname(__FILE__) . '/jeph/index.js'),
+		file_get_contents($f),
 		array('file' => $f)
 	);
 
@@ -56,12 +57,16 @@ $c(JS::$global);
 
 JS::$global->properties['_request']->properties['basePath'] = $basePath;
 
-$fns = JS::$global->properties['require']->properties['_functions']->properties;
+$fns = array();
 
 foreach ($compiled->functions as $fn => $c) {
 	if ($fn !== $compiled->main) {
 		$fns[$fn] = $c;
 	}
+}
+
+foreach (JS::$global->properties['require']->properties['compiled']->properties as $file => $compiledObject) {
+	$fns = array_merge($fns, $compiledObject->properties['functions']->properties);
 }
 
 foreach ($fns as $fn => $c) {
