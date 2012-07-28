@@ -1,5 +1,5 @@
 task("all", "clean and build bundle",
-	"clean", "build:bundle");
+	"clean", "build:bundle", "clean:js2php");
 
 task("build:recompile", "build recompile script",
 	result(__dirname + "/build/recompile.php"),
@@ -18,18 +18,14 @@ task("build:image", "build image with loader",
 			run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:parser", "5.2");
 		}
 
-		run("touch", __dirname + "/js2php/src/image/*");
-		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image", "loadFunction");
-		run("mv", __dirname + "/js2php/build/image.php", __dirname + "/build");
-
-		if (php52) {
-			run("touch", __dirname + "/js2php/src/JSParser.phpeg");
-			run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:parser");
+		try {
+			run("grep loadFunction " + __dirname + "/js2php/build/image.php > /dev/null");
+		} catch (e) {
+			run("touch", __dirname + "/js2php/src/image/*");
 		}
 
-		run("touch", __dirname + "/js2php/src/image/*");
-		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image");
-		run("touch", __dirname + "/build/image.php");
+		run("cd", __dirname + "/js2php;", __dirname + "/js2php/util/jake", "build:image", "loadFunction");
+		run("cp", __dirname + "/js2php/build/image.php", __dirname + "/build");
 	});
 
 task("build:bundle", "build jeph bundle",
@@ -74,7 +70,7 @@ task("build:bundle", "build jeph bundle",
 			code += "@mkdir(dirname(__FILE__) . " +
 				PHP.fn("var_export")("/jeph/" + d, true) + ", 0775);\n";
 
-			PHP.fn("glob")(__dirname + "/src/" + d + "/*.js").forEach(function (f) {
+			PHP.fn("glob")(__dirname + "/src/" + d + "/*.*").forEach(function (f) {
 				code += "file_put_contents(dirname(__FILE__) . '/jeph/" +
 					f.substring((__dirname + "/src/").length) + "', " +
 					var_export(PHP.fn("file_get_contents")(f), true) + ");\n";
@@ -169,6 +165,11 @@ task("clean", "clean build/ directory",
 	function () {
 		run("rm -rf", __dirname + "/build/*");
 		run("rm -rf", __dirname + "/try");
+	});
+
+task("clean:js2php", "clean js2php/ directory",
+	function () {
+		run("cd " + __dirname + "/js2php;", "git co .");
 	});
 
 task("try", "create try/ directory with bundle installed",

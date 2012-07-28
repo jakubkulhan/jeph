@@ -2,7 +2,16 @@ var jeph = require("jeph"),
 	jephdb = require("jephdb"),
 	MemoryStore = require("jephdb/stores/MemoryStore"),
 	sha1 = PHP.fn("sha1"),
-	db = new jephdb(new MemoryStore);
+	db = new jephdb(new MemoryStore),
+	jaml = require("jaml")
+	tpl = jaml.compile(
+			"!!! 5\n" +
+			"html\n" +
+			"  head\n" +
+			"    title= title\n" +
+			"  body\n" +
+			"    h1= title\n" +
+			"    != content\n");
 
 require("jeph/properties");
 
@@ -26,23 +35,24 @@ jephdb.namespace("app", function (db) {
 db.create(sha1("index"), {
 	"jeph/type": "app/page",
 	"jeph/path": "/",
-	"app/content": "<!doctype html><html>" +
-		"<head><title>Hi! This is Jeph.</title></head><body>" +
-		"<h1>Hi! This is Jeph.</h1>" +
-		"<p>Jeph is an application framework that runs Javascript on top of PHP engine.</p>" +
-		"<p>Also, <a href=\"another-page\">try this link</a></p>" +
-		"</body></html>"
+	"app/content": tpl({
+		title: "Hi! This is Jeph.",
+		content: jaml.compile(
+			'p Jeph is an application framework that runs Javascript on top of PHP engine.\n' +
+			'p Also,\n' +
+			'  a(href="another-page") try this link!')()
+	})
 }).save();
 
 db.create(sha1("another-page"), {
 	"jeph/type": "app/page",
 	"jeph/path/parent": sha1("index"),
 	"jeph/path/relative": "another-page",
-	"app/content": "<!doctype html><html>" +
-		"<head><title>Another page</title></head><body>" +
-		"<h1>Another page</h1>" +
-		"<p>Another page served by Jeph.</p>" +
-		"</body></html>"
+	"app/content": tpl({
+		title: "Another page",
+		content: jaml.compile(
+			'p Another page served by Jeph.')()
+	})
 }).save();
 
 jeph(function (req, res) {

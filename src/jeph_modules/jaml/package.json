@@ -1,0 +1,2 @@
+{ "name": "jaml",
+  "main": "./compiler.js" }

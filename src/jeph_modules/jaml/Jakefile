@@ -1,0 +1,15 @@
+task("all", "build parser and run test",
+	"build:parser", "test");
+
+task("build:parser", "build parser",
+	result(__dirname + "/parser.js"),
+	__dirname + "/parser.pegjs",
+	function () {
+		run("pegjs", __dirname + "/parser.pegjs", __dirname + "/parser.js")
+	});
+
+task("test", "run tests",
+	"build:parser",
+	function () {
+		run("jtest", __dirname + "/test");
+	});

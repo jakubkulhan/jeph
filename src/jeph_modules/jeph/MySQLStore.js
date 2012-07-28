@@ -1,5 +1,5 @@
-var Store = require("../Store"),
-	jephdb = require("../../jephdb"); // FIXME
+var Store = require("jephdb/Store"),
+	jephdb = require("jephdb");
 
 function MySQLStore(options) {
 	if (typeof options.host === "undefined") {

@@ -1,6 +1,28 @@
 <?php
 require dirname(__FILE__) . '/recompile.init.php'; // exports $imageCode, $serialized, and $basePath
 
+function unloadify($o, $t = NULL) {
+	static $traversed = array();
+
+	if ($t !== NULL) { $traversed = $t; }
+
+	if (is_object($o) && $o instanceof JSUndefined) { return; }
+	if (is_object($o) && isset($traversed[spl_object_hash($o)])) { return; }
+	if (!is_object($o) && !is_array($o)) { return; }
+
+	if (is_object($o)) {
+		$traversed[spl_object_hash($o)] = TRUE;
+	}
+
+	if (isset($o->call)) {
+		$o->loaded = FALSE;
+	}
+
+	foreach ($o as $v) {
+		unloadify($v);
+	}
+}
+
 eval($imageCode);
 
 function loadFunction($fn) {
@@ -51,6 +73,7 @@ if (file_exists(dirname(__FILE__) . '/cache/jeph') &&
 
 eval(implode("\n", $compiled->functions));
 foreach (unserialize($serialized) as $k => $v) { JS::$$k = $v; }
+unloadify(JS::$global, array());
 
 $c = $compiled->main;
 $c(JS::$global);
@@ -79,27 +102,7 @@ foreach ($fns as $fn => $c) {
 	file_put_contents(dirname(__FILE__) . "/f/$fn.php", "<?php\n$c");
 }
 
-function unloadify($o) {
-	static $traversed = array();
-
-	if (is_object($o) && $o instanceof JSUndefined) { return; }
-	if (is_object($o) && isset($traversed[spl_object_hash($o)])) { return; }
-	if (!is_object($o) && !is_array($o)) { return; }
-
-	if (is_object($o)) {
-		$traversed[spl_object_hash($o)] = TRUE;
-	}
-
-	if (isset($o->call)) {
-		$o->loaded = FALSE;
-	}
-
-	foreach ($o as $v) {
-		unloadify($v);
-	}
-}
-
-unloadify(JS::$global);
+unloadify(JS::$global, array());
 
 JS::$global->properties['require']->properties['compiled'] = clone JS::$objectTemplate;
 JS::$global->properties['require']->properties['saveCompiled'] = false;
