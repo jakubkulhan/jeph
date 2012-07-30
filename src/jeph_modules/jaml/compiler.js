@@ -54,7 +54,11 @@ Object.defineProperty(nodes.Comment.prototype, "compile", { value: function () {
 
 Object.defineProperty(nodes.Code.prototype, "compile", { value: function () {
     return this.code + "\n" +
-        (this.content.length
+        (this.content.length &&
+		 this.code.charAt(this.code.length - 1) !== "{" &&
+		 this.code.charAt(this.code.length - 1) !== "}" &&
+		 this.code.charAt(0) !== "{" &&
+		 this.code.charAt(0) !== "}"
             ? "{\n" + compileContent(this.content) + "\n}"
             : "");
 }});

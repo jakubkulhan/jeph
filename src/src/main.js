@@ -1,9 +1,9 @@
 var jeph = require("jeph"),
-	jephdb = require("jephdb"),
-	MemoryStore = require("jephdb/stores/MemoryStore"),
-	sha1 = PHP.fn("sha1"),
-	db = new jephdb(new MemoryStore),
-	jaml = require("jaml")
+	JephDB = require("jephdb"),
+	MemoryStore = JephDB.MemoryStore,
+	store = new MemoryStore,
+	db = new JephDB(store),
+	jaml = require("jaml"),
 	tpl = jaml.compile(
 			"!!! 5\n" +
 			"html\n" +
@@ -13,26 +13,26 @@ var jeph = require("jeph"),
 			"    h1= title\n" +
 			"    != content\n");
 
-require("jeph/properties");
+jeph(jeph.JephDBHandler(new JephDB(store)));
 
-jephdb.namespace("app", function (db) {
+db.namespace("app", function (db) {
 	db.property("content", function (p) { p.type = "string"; });
 
-	jephdb.transformation({
+	db.transformation({
 		"jeph/type": "app/page",
 		"app/content": true,
 		"jeph/handle": function () {
 			return function (req, res) {
 				res.writeHead(200, { "content-type": "text/html",
-					"content-length": this["app/content"].length });
+					"content-length": this.get("app/content").length });
 
-				res.end(this["app/content"]);
+				res.end(this.get("app/content"));
 			};
 		}
 	});
 });
 
-db.create(sha1("index"), {
+var index = db.create({
 	"jeph/type": "app/page",
 	"jeph/path": "/",
 	"app/content": tpl({
@@ -44,9 +44,9 @@ db.create(sha1("index"), {
 	})
 }).save();
 
-db.create(sha1("another-page"), {
+db.create({
 	"jeph/type": "app/page",
-	"jeph/path/parent": sha1("index"),
+	"jeph/path/parent": index.id,
 	"jeph/path/relative": "another-page",
 	"app/content": tpl({
 		title: "Another page",
@@ -55,36 +55,5 @@ db.create(sha1("another-page"), {
 	})
 }).save();
 
-jeph(function (req, res) {
-	req.db = res.db = db;
-
-	var path = req.url.substring(req.basePath.length);
-
-	if (path.indexOf("?") !== -1) {
-		path = path.substring(0, path.indexOf("?"));
-	}
-
-	if (path === "") { path = "/"; }
-
-	var results = db.query({ "jeph/path": path, "jeph/handle": true }).take(1).fetch(), body;
-
-	if (results.length < 1) {
-		body = "404 Not Found\n";
-
-	} else {
-		var entity = results[0];
-
-		if (typeof entity["jeph/handle"] !== "undefined") {
-			return entity["jeph/handle"](req, res);
-		}
-	}
-
-	if (typeof body === "undefined") {
-		body = "500 Internal Server Error\n";
-	}
-
-	res.writeHead(Number(body.substring(0, 4)), { "content-type": "text/plain",
-		"content-length": body.length });
-
-	res.end(body);
-});
+delete db;
+delete index;

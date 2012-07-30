@@ -1,78 +1,127 @@
-function Entity(id, data, transformed) {
-	if (typeof id !== "string" || id.length !== 40) {
+var generateID = function () {
+		return require("crypto").createHash("sha1")
+			.update(String(Math.random())).digest("hex");
+	};
+
+function Entity(id, data, metadata) {
+	if (typeof id !== "string") {
+		metadata = data;
+		data = id;
+		id = generateID();
+
+	} else if (typeof id === "string" && id.length !== 40) {
 		throw new Error("ID has to be 40-bytes long string (SHA1 hash in hex)");
 	}
 
-	transformed = transformed || {};
-
 	Object.defineProperty(this, "id", { value: id, enumerable: true });
-	Object.defineProperty(this, "_transformed", { value: transformed });
-	Object.defineProperty(this, "_dirty", { value: {} });
-
-	for (var k in data) {
-		this.addProperty(k, data[k]);
-	}
-
-	Object.defineProperty(this, "_keys", { value: Object.keys(this).toString(),
-		configurable: true });
+	Object.defineProperty(this, "_data", { value: data || {},
+		enumerable: true, configurable: true });
+	Object.defineProperty(this, "_metadata", { value: metadata || {},
+		enumerable: true, configurable: true });
+	Object.defineProperty(this, "_dirty", { value: {}, configurable: true });
 }
 
 Object.defineProperties(Entity.prototype, {
-	addProperty: {
-		value: function (p, value, transformed) {
-			if (typeof this[p] !== "undefined") {
-				throw new Error("entity already has property " + p);
+	get: {
+		value: function (p) {
+			if (!p) { return this._data; }
+			return this._data[p];
+		}
+	},
+
+	set: {
+		value: function (p, v) {
+			if (this._data[p] !== v) {
+				this._data[p] = v;
+				this._dirty[p] = true;
 			}
 
-			Object.defineProperty(this, "_" + p, { value: value,
-				writable: true, configurable: true });
+			return this;
+		}
+	},
 
-			Object.defineProperty(this, p, {
-				get: function () {
-					return value;
-				},
+	getMeta: {
+		value: function (p) {
+			if (!p) { return this._metadata; }
+			return this._metadata[p];
+		}
+	},
 
-				set: function (v) {
-					delete this._transformed[p];
+	setMeta: {
+		value: function (p, v) {
+			if (this._metadata[p] !== v) {
+				this._metadata[p] = v;
+				this._dirty[p] = true;
+			}
 
-					if (this["_" + p] !== v) {
-						this._dirty[p] = true;
+			return this;
+		}
+	},
+
+	update: {
+		value: function (newData, newMetadata) {
+			Object.defineProperty(this, "_data", { value: newData || {},
+				enumerable: true, configurable: true });
+			Object.defineProperty(this, "_metadata", { value: newMetadata || {},
+				enumerable: true, configurable: true });
+			Object.defineProperty(this, "_dirty", { value: {}, configurable: true });
+			return this;
+		}
+	},
+
+	match: {
+		value: function (matcher, ignoreBadConditions) {
+			if (matcher === null || typeof matcher !== "object") {
+				throw new Error("Given argument is not an object to be matched against");
+			}
+
+			var k, v;
+
+			for (k in matcher) {
+				v = matcher[k];
+
+				if (v === undefined || v === null || typeof v === "boolean") {
+					if (v && (this._data[k] === undefined &&
+						this._metadata[k] === undefined)) { return false; }
+
+					if (!v && (this._data[k] !== undefined ||
+						this._metadata[k] !== undefined)) { return false; }
+
+				} else if (typeof v === "string" || typeof v === "number") {
+					if (this._data[k] !== v) { return false; }
+
+				} else if (Array.isArray(v)) {
+					if (v.indexOf(this._data[k]) === -1) { return false; }
+
+				} else {
+					// FIXME: matching using objects - <, >, <=, >=, RegExps
+					if (!ignoreBadConditions) {
+						throw new Error("matching using " + c + " is not supported");
 					}
-						
-					value = v;
-				},
-
-				enumerable: true,
-				configurable: true
-			});
-
-			if (transformed) {
-				this._transformed[p] = true;
+				}
 			}
+
+			return true;
 		}
 	},
 
 	isDirty: {
 		value: function (p) {
-			if (p) {
-				return typeof this._dirty[p] !== "undefined";
-			}
-
-			return Object.keys(this._dirty).length > 0 ||
-				Object.keys(this).toString() !== this._keys;
-		}
-	},
-
-	undirty: {
-		value: function () {
-			for (var k in this) {
-				if (k !== "id") {
-					this["_" + k] = this[k];
+			if (typeof p === "boolean") {
+				if (p === false) {
+					Object.defineProperty(this, "_dirty", { value: {}, configurable: true });
+				} else {
+					this._dirty["_"] = true;
 				}
+
+				return p;
 			}
 
-			Object.defineProperty(this, "_keys", { value: Object.keys(this).toString(),
-				configurable: true });
+			if (p) {
+				return this._dirty[p] !== undefined;
+			}
+
+			return Object.keys(this._dirty).length > 0;
 		}
 	}
 });

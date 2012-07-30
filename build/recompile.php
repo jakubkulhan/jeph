@@ -42,8 +42,8 @@ $code = "<?php\n" .
 	"if (filemtime(__FILE__) < filemtime(dirname(__FILE__) . '/jeph/src/main.js')) { " .
 		"return require dirname(__FILE__) . '/jeph/recompile.php'; }\n" .
 	"if (TRUE) {\n" .
-	"function loadFunction(\$fn) { require_once dirname(__FILE__) . " .
-	"\"/jeph/f/{\$fn->call}.php\"; \$fn->loaded = TRUE; }\n" .
+	"function loadFunction(\$fn) { if (!function_exists(\$fn->call)) { " .
+		"require_once dirname(__FILE__) . \"/jeph/f/{\$fn->call}.php\"; } \$fn->loaded = TRUE; }\n" .
 	"function __autoload(\$c) { require_once dirname(__FILE__) . \"/jeph/c/\$c.php\"; }\n" .
 	$imageCode;
 $f = dirname(__FILE__) . '/jeph_modules/jeph/index.js';

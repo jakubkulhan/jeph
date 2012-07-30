@@ -1,5 +1,14 @@
+var fs = require("fs");
+
 task("all", "clean and build bundle",
-	"clean", "build:bundle", "clean:js2php");
+	"clean", "build:jaml", "build:bundle", "clean:js2php", "test");
+
+task("build:jaml", "build jaml parser",
+	result(__dirname + "/src/jeph_modules/jaml/parser.js"),
+	__dirname + "/src/jeph_modules/jaml/parser.pegjs",
+	function () {
+		run("cd", __dirname + "/src/jeph_modules/jaml;", __dirname + "/js2php/util/jake", "build:parser");
+	});
 
 task("build:recompile", "build recompile script",
 	result(__dirname + "/build/recompile.php"),
@@ -170,6 +179,15 @@ task("clean", "clean build/ directory",
 task("clean:js2php", "clean js2php/ directory",
 	function () {
 		run("cd " + __dirname + "/js2php;", "git co .");
+	});
+
+task("test", "run tests",
+	function () {
+		fs.readdirSync(__dirname + "/src/jeph_modules").forEach(function (m) {
+			if (fs.existsSync(__dirname + "/src/jeph_modules/" + m + "/test")) {
+				run(__dirname + "/js2php/util/jtest", __dirname + "/src/jeph_modules/" + m + "/test");
+			}
+		});
 	});
 
 task("try", "create try/ directory with bundle installed",

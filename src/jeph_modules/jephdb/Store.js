@@ -6,7 +6,7 @@ Store.prototype.load = function load(id) {
 	throw new NotImplementedError;
 };
 
-Store.prototype.save = function save(id, object) {
+Store.prototype.save = function save(id, data, metadata) {
 	throw new NotImplementedError;
 };
 

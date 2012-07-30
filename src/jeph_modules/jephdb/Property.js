@@ -1,9 +1,11 @@
-function Property(name, description) {
+function Property(name, options) {
+	options = options || {};
+
+	for (var k in options) {
+		this[k] = options[k];
+	}
+
 	this.name = name;
-	this.description = description;
-	this.transformations = [];
-	this.longDescription = undefined;
-	this.type = undefined;
 }
 
 exports = Property;
